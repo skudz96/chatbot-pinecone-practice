@@ -1,10 +1,36 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import Chat from "./Components/Chat";
-import { useChat } from "ai/react";
+import { Message } from "ai/react";
 
 const Page: React.FC = () => {
-  const { messages, input, handleInputChange, handleSubmit } = useChat();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const newMessage: Message = { role: "user", content: input };
+    setMessages([...messages, newMessage]);
+    setInput("");
+
+    try {
+      const response = await fetch("/api/chat/route", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ messages: [...messages, newMessage] }),
+      });
+      const data = await response.json();
+      setMessages([...messages, newMessage, ...data.messages]);
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">

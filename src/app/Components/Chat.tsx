@@ -1,4 +1,4 @@
-import React, { FormEvent, ChangeEvent } from "react";
+import React, { FormEvent, ChangeEvent, useState } from "react";
 import { Message } from "ai/react";
 
 interface Chat {
@@ -14,6 +14,28 @@ const Chat: React.FC<Chat> = ({
   handleMessageSubmit,
   messages,
 }) => {
+  const [loading, setLoading] = useState(false);
+
+  const onSubmit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      const response = await fetch("/api/chat/route", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ messages }),
+      });
+      const data = await response.json();
+      // Handle the response data
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-7rem)] bg-gray-100">
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
@@ -40,7 +62,7 @@ const Chat: React.FC<Chat> = ({
         ))}
       </div>
       <div className="border-t border-gray-200 p-4">
-        <form onSubmit={handleMessageSubmit} className="flex space-x-2">
+        <form onSubmit={onSubmit} className="flex space-x-2">
           <input
             type="text"
             className="flex-1 rounded-full border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 text-black"
@@ -51,8 +73,9 @@ const Chat: React.FC<Chat> = ({
           <button
             type="submit"
             className="bg-blue-500 text-white rounded-full px-6 py-2 hover:bg-blue-600 transition duration-300 ease-in-out"
+            disabled={loading}
           >
-            Send
+            {loading ? "Sending..." : "Send"}
           </button>
         </form>
         <span className="text-xs text-gray-500 mt-2 block text-center">
